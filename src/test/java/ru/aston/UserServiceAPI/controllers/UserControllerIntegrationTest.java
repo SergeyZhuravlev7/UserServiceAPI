@@ -47,7 +47,7 @@ class UserControllerIntegrationTest {
 
     static List<UserDTOIn> users = new ArrayList<>();
     static boolean isInitialized = false;
-
+    String userNotFoundError = "Sorry, but user with current parameters was not found";
     @Autowired
     private UserRepository userRepository;
     @MockitoSpyBean
@@ -58,8 +58,6 @@ class UserControllerIntegrationTest {
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
-
-    String userNotFoundError = "Sorry, but user with current parameters was not found";
 
     @BeforeAll
     static void beforeAll() {
@@ -73,6 +71,41 @@ class UserControllerIntegrationTest {
     @AfterAll
     static void afterAll() {
         postgreSQLContainer.stop();
+    }
+
+    private static Stream<Arguments> getExistingIds() {
+        return IntStream.rangeClosed(1,30)
+                .mapToObj(i -> Arguments.of((long) i));
+    }
+
+    private static Stream<Arguments> getValidUsers() {
+        return IntStream.rangeClosed(1,10)
+                .mapToObj(i -> Arguments.of(new UserDTOIn("Validuser","ValidUser" + i + "@gmail.com",70)));
+    }
+
+    private static Stream<Arguments> getUpdatedUsers() {
+        return IntStream.rangeClosed(1,30)
+                .mapToObj(i -> Arguments.of(String.valueOf(i),new UserDTOIn("Updateduser","UpdatedUser" + i + "@gmail.com",70)));
+    }
+
+    private static Stream<Arguments> getUsersWithAgeSmallerThan18() {
+        return IntStream.of(1,8,9,12,14,17)
+                .mapToObj(i -> Arguments.of(new UserDTOIn("Validname","validemail@gmail.com",i)));
+    }
+
+    private static Stream<Arguments> getUsersWithAgeGreaterThan99() {
+        return IntStream.of(100,115,500,485,999)
+                .mapToObj(i -> Arguments.of(new UserDTOIn("Validname","validemail@gmail.com",i)));
+    }
+
+    private static Stream<Arguments> getUsersWithInvalidName() {
+        return Stream.of("",null,"nAME","Na","Namenamenamenamename")
+                .map(str -> Arguments.of(new UserDTOIn(str,"validemail@gmail.com",30)));
+    }
+
+    private static Stream<Arguments> getUsersWithInvalidEmail() {
+        return Stream.of("",null,"blablabla","actuallyNotEmail","blabla@gmail.com@gmail.com")
+                .map(str -> Arguments.of(new UserDTOIn("Validname",str,30)));
     }
 
     public void init() {
@@ -294,37 +327,5 @@ class UserControllerIntegrationTest {
         assertTrue(error.contains("Email"));
         assertFalse(error.contains("Name"));
         assertFalse(error.contains("Age"));
-    }
-
-    private static Stream<Arguments> getExistingIds() {
-        return IntStream.rangeClosed(1,30)
-                .mapToObj(i -> Arguments.of((long) i));
-    }
-
-    private static Stream<Arguments> getValidUsers() {
-        return IntStream.rangeClosed(1,10)
-                .mapToObj(i -> Arguments.of(new UserDTOIn("Validuser","ValidUser" + i + "@gmail.com",70)));
-    }
-
-    private static Stream<Arguments> getUpdatedUsers() {
-        return IntStream.rangeClosed(1,30)
-                .mapToObj(i -> Arguments.of(String.valueOf(i),new UserDTOIn("Updateduser","UpdatedUser" + i + "@gmail.com",70)));
-    }
-
-    private static Stream<Arguments> getUsersWithAgeSmallerThan18() {
-        return IntStream.of(1,8,9,12,14,17)
-                .mapToObj(i -> Arguments.of(new UserDTOIn("Validname","validemail@gmail.com",i)));
-    }
-    private static Stream<Arguments> getUsersWithAgeGreaterThan99() {
-        return IntStream.of(100,115,500,485,999)
-                .mapToObj(i -> Arguments.of(new UserDTOIn("Validname","validemail@gmail.com",i)));
-    }
-    private static Stream<Arguments> getUsersWithInvalidName() {
-        return Stream.of("", null, "nAME", "Na", "Namenamenamenamename")
-                .map(str -> Arguments.of(new UserDTOIn(str, "validemail@gmail.com", 30)));
-    }
-    private static Stream<Arguments> getUsersWithInvalidEmail() {
-        return Stream.of("", null, "blablabla", "actuallyNotEmail", "blabla@gmail.com@gmail.com")
-                .map(str -> Arguments.of(new UserDTOIn("Validname", str, 30)));
     }
 }

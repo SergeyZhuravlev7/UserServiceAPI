@@ -27,23 +27,23 @@ public class GlobalExceptionHandler {
         return new ResponseEntity<>(ex.getErrorMap(),HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String,String>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+    @ExceptionHandler (HttpMessageNotReadableException.class)
+    public ResponseEntity<Map<String, String>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
         return new ResponseEntity<>(getErrorMap(ErrorMessages.NotReadable.getMessage()),HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(ServletRequestBindingException.class)
-    public ResponseEntity<Map<String,String>> handleServletRequestBindingException(ServletRequestBindingException ex) {
+    @ExceptionHandler (ServletRequestBindingException.class)
+    public ResponseEntity<Map<String, String>> handleServletRequestBindingException(ServletRequestBindingException ex) {
         return new ResponseEntity<>(getErrorMap(ErrorMessages.BadRequest.getMessage()),HttpStatus.BAD_REQUEST);
     }
 
-    @ExceptionHandler(HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<Map<String,String>> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
+    @ExceptionHandler (HttpRequestMethodNotSupportedException.class)
+    public ResponseEntity<Map<String, String>> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
         return new ResponseEntity<>(getErrorMap(ex.getMessage()),ex.getStatusCode());
     }
 
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<Map<String,String>> handleUnknownException(HttpRequestMethodNotSupportedException ex) {
+    @ExceptionHandler (Exception.class)
+    public ResponseEntity<Map<String, String>> handleUnknownException(HttpRequestMethodNotSupportedException ex) {
         return new ResponseEntity<>(getErrorMap(ErrorMessages.UnknownException.getMessage()),ex.getStatusCode());
     }
 

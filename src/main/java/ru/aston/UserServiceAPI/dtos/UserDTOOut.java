@@ -2,10 +2,9 @@ package ru.aston.UserServiceAPI.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 
-import java.time.LocalDateTime;
 import java.util.Objects;
 
-@JsonIgnoreProperties(ignoreUnknown = true)
+@JsonIgnoreProperties (ignoreUnknown = true)
 
 public class UserDTOOut {
 

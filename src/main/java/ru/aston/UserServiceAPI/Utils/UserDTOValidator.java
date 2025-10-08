@@ -31,7 +31,7 @@ public class UserDTOValidator implements Validator {
         if (userDTOIn.getEmail() != null) {
             Optional<User> userOptional = userService.getUserByEmail(userDTOIn.getEmail());
             if (userOptional.isPresent()) {
-                errors.rejectValue("email",null,"Email already exists");
+                errors.rejectValue("email",null,"Email " + userDTOIn.getEmail() + " already exists.");
             }
         }
     }

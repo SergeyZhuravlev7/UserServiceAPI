@@ -4,7 +4,6 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.AfterAll;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
-import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -21,7 +20,6 @@ import ru.aston.UserServiceAPI.Utils.ErrorMessages;
 import ru.aston.UserServiceAPI.Utils.UserDTOValidator;
 import ru.aston.UserServiceAPI.dtos.UserDTOIn;
 import ru.aston.UserServiceAPI.dtos.UserDTOOut;
-import ru.aston.UserServiceAPI.entitys.User;
 import ru.aston.UserServiceAPI.repos.UserRepository;
 import ru.aston.UserServiceAPI.services.UserService;
 
@@ -30,8 +28,7 @@ import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -62,11 +59,7 @@ class UserControllerIntegrationTest {
     @Autowired
     private ObjectMapper objectMapper;
 
-    UserDTOIn validUserDTOIn;
-    User validUser;
-    UserDTOOut validUserDTOOut;
-    UserDTOIn invalidUserDTOIn;
-    String userNotFoundMessage = "Sorry, but user with current parameters was not found";
+    String userNotFoundError = "Sorry, but user with current parameters was not found";
 
     @BeforeAll
     static void beforeAll() {
@@ -83,7 +76,6 @@ class UserControllerIntegrationTest {
     }
 
     public void init() {
-        userService.createUser(validUserDTOIn);
         for (UserDTOIn userDTOIn : users) {
             userService.createUser(userDTOIn);
         }
@@ -92,12 +84,6 @@ class UserControllerIntegrationTest {
 
     @BeforeEach
     void setUp() {
-        validUserDTOIn = new UserDTOIn("SomeName","someemail@gmail.com",30);
-        validUser = new User(validUserDTOIn.getName(),validUserDTOIn.getEmail(),validUserDTOIn.getAge());
-        validUser.setId(1L);
-        validUserDTOOut = new UserDTOOut(validUser.getName(),validUser.getEmail(),validUser.getAge());
-        validUserDTOOut.setId(1L);
-        invalidUserDTOIn = new UserDTOIn("","ActuallyNotEmail",999);
         if (! isInitialized) init();
     }
 
@@ -123,7 +109,7 @@ class UserControllerIntegrationTest {
                 .andReturn();
 
         assertEquals(400,response.getResponse().getStatus());
-        assertTrue(response.getResponse().getContentAsString().contains(userNotFoundMessage));
+        assertTrue(response.getResponse().getContentAsString().contains(userNotFoundError));
     }
 
     @ParameterizedTest
@@ -231,7 +217,7 @@ class UserControllerIntegrationTest {
 
     @ParameterizedTest
     @MethodSource ("getUpdatedUsers")
-    void updateUser(String id, UserDTOIn userDTOIn) throws Exception {
+    void updateUser(String id,UserDTOIn userDTOIn) throws Exception {
         var response = mockMvc.perform(put("/user")
                         .param("id",id)
                         .contentType(MediaType.APPLICATION_JSON)
@@ -246,6 +232,70 @@ class UserControllerIntegrationTest {
         assertEquals(userDTOIn.getAge(),updatedUser.getAge());
     }
 
+    @ParameterizedTest
+    @MethodSource ("getUsersWithAgeSmallerThan18")
+    void createUserWithAgeSmallerThan18ShouldReturnErrorMessage(UserDTOIn userDTOIn) throws Exception {
+        var response = mockMvc.perform(post("/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userDTOIn)))
+                .andReturn();
+
+        String error = response.getResponse().getContentAsString();
+        assertEquals(400,response.getResponse().getStatus());
+        assertTrue(error.contains("Age"));
+        assertFalse(error.contains("Email"));
+        assertFalse(error.contains("Name"));
+    }
+
+    @ParameterizedTest
+    @MethodSource ("getUsersWithAgeGreaterThan99")
+    void createUserWithAgeGreaterThan99ShouldReturnErrorMessage(UserDTOIn userDTOIn) throws Exception {
+        var response = mockMvc.perform(post("/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userDTOIn)))
+                .andReturn();
+
+        String error = response.getResponse().getContentAsString();
+        assertEquals(400,response.getResponse().getStatus());
+        assertTrue(error.contains("Age"));
+        assertFalse(error.contains("Email"));
+        assertFalse(error.contains("Name"));
+    }
+
+    @ParameterizedTest
+    @MethodSource ("getUsersWithInvalidName")
+    void createUserWithInvalidNameShouldReturnErrorMessage(UserDTOIn userDTOIn) throws Exception {
+        var response = mockMvc.perform(post("/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userDTOIn)))
+                .andReturn();
+
+        String error = response.getResponse().getContentAsString();
+        assertEquals(400,response.getResponse().getStatus());
+        assertTrue(error.contains("Name"));
+        assertFalse(error.contains("Email"));
+        assertFalse(error.contains("Age"));
+    }
+
+    @ParameterizedTest
+    @MethodSource ("getUsersWithInvalidEmail")
+    void createUserWithInvalidEmailShouldReturnErrorMessage(UserDTOIn userDTOIn) throws Exception {
+        var response = mockMvc.perform(post("/user")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(userDTOIn)))
+                .andReturn();
+
+        String error = response.getResponse().getContentAsString();
+        assertEquals(400,response.getResponse().getStatus());
+        assertTrue(error.contains("Email"));
+        assertFalse(error.contains("Name"));
+        assertFalse(error.contains("Age"));
+    }
+
     private static Stream<Arguments> getExistingIds() {
         return IntStream.rangeClosed(1,30)
                 .mapToObj(i -> Arguments.of((long) i));
@@ -253,11 +303,28 @@ class UserControllerIntegrationTest {
 
     private static Stream<Arguments> getValidUsers() {
         return IntStream.rangeClosed(1,10)
-                .mapToObj(i -> Arguments.of(new UserDTOIn("ValidUser" + i,"ValidUser" + i + "@gmail.com",70)));
+                .mapToObj(i -> Arguments.of(new UserDTOIn("Validuser","ValidUser" + i + "@gmail.com",70)));
     }
 
     private static Stream<Arguments> getUpdatedUsers() {
         return IntStream.rangeClosed(1,30)
-                .mapToObj(i -> Arguments.of(String.valueOf(i),new UserDTOIn("UpdatedUser" + i,"UpdatedUser" + i + "@gmail.com",70)));
+                .mapToObj(i -> Arguments.of(String.valueOf(i),new UserDTOIn("Updateduser","UpdatedUser" + i + "@gmail.com",70)));
+    }
+
+    private static Stream<Arguments> getUsersWithAgeSmallerThan18() {
+        return IntStream.of(1,8,9,12,14,17)
+                .mapToObj(i -> Arguments.of(new UserDTOIn("Validname","validemail@gmail.com",i)));
+    }
+    private static Stream<Arguments> getUsersWithAgeGreaterThan99() {
+        return IntStream.of(100,115,500,485,999)
+                .mapToObj(i -> Arguments.of(new UserDTOIn("Validname","validemail@gmail.com",i)));
+    }
+    private static Stream<Arguments> getUsersWithInvalidName() {
+        return Stream.of("", null, "nAME", "Na", "Namenamenamenamename")
+                .map(str -> Arguments.of(new UserDTOIn(str, "validemail@gmail.com", 30)));
+    }
+    private static Stream<Arguments> getUsersWithInvalidEmail() {
+        return Stream.of("", null, "blablabla", "actuallyNotEmail", "blabla@gmail.com@gmail.com")
+                .map(str -> Arguments.of(new UserDTOIn("Validname", str, 30)));
     }
 }

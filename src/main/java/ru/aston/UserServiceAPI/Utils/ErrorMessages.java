@@ -7,11 +7,11 @@ public enum ErrorMessages {
     UnknownException("Something went wrong"),
     ;
 
+    private final String message;
+
     ErrorMessages(String message) {
         this.message = message;
     }
-
-    private final String message;
 
     public String getMessage() {
         return this.message;

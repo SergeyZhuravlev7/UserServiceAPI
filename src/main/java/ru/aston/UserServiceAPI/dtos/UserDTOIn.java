@@ -4,16 +4,17 @@ import jakarta.validation.constraints.*;
 
 public class UserDTOIn {
 
-    @NotNull
-    @NotBlank
-    @NotEmpty
+    @NotNull (message = "Name cant be a null.")
+    @Pattern (regexp = "^[A-Z][a-z]{2,14}$", message = "Name should start with upper case letter and should be between 3 and 15 letters.")
     private String name;
 
-    @Email
+    @Email (message = "Email should be a valid email.")
+    @NotNull (message = "Email cant be a null.")
+    @NotEmpty (message = "Email cant be empty.")
     private String email;
 
-    @Min (18)
-    @Max (99)
+    @Min (value = 18, message = "Age should be equals or greater 18 years old.")
+    @Max (value = 99, message = "Age should be smaller then 100 years old.")
     private int age;
 
     public UserDTOIn() {

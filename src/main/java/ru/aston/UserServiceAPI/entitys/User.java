@@ -1,7 +1,6 @@
 package ru.aston.UserServiceAPI.entitys;
 
 import jakarta.persistence.*;
-import jakarta.validation.constraints.*;
 import org.springframework.format.annotation.DateTimeFormat;
 import ru.aston.UserServiceAPI.dtos.UserDTOIn;
 
@@ -17,17 +16,10 @@ public class User {
     @Column (name = "id", nullable = false)
     private Long id;
 
-    @NotNull
-    @NotBlank
-    @Size(min = 1, max = 20)
     private String name;
 
-    @Email
-    @Column (unique = true)
     private String email;
 
-    @Min (18)
-    @Max (99)
     private int age;
 
     @DateTimeFormat (pattern = "dd.MM.yyyy HH:mm:ss:SS")

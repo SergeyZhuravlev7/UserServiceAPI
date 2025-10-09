@@ -9,6 +9,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
+import ru.aston.UserServiceAPI.Utils.Updatable;
 import ru.aston.UserServiceAPI.dtos.UserDTOIn;
 import ru.aston.UserServiceAPI.dtos.UserDTOOut;
 import ru.aston.UserServiceAPI.entitys.User;
@@ -82,6 +83,7 @@ public class UserServiceImpl implements UserService {
     }
 
     @Transactional (readOnly = false)
+    @Updatable
     public UserDTOOut createUser(UserDTOIn userDTOIn) {
         User user = userRepository.save(getUserFromDTO(userDTOIn));
         return objectMapper.convertValue(user,UserDTOOut.class);

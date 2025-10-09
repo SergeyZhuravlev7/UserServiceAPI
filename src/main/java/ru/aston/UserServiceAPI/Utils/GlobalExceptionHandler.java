@@ -43,8 +43,8 @@ public class GlobalExceptionHandler {
     }
 
     @ExceptionHandler (Exception.class)
-    public ResponseEntity<Map<String, String>> handleUnknownException(HttpRequestMethodNotSupportedException ex) {
-        return new ResponseEntity<>(getErrorMap(ErrorMessages.UnknownException.getMessage()),ex.getStatusCode());
+    public ResponseEntity<Map<String, String>> handleUnknownException(Exception ex) {
+        return new ResponseEntity<>(getErrorMap(ErrorMessages.UnknownException.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private Map<String, String> getErrorMap(String message) {

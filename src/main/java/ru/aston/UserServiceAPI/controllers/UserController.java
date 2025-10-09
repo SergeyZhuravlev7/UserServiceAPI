@@ -6,6 +6,7 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
 import org.springframework.web.bind.annotation.*;
+import ru.aston.UserServiceAPI.Utils.Loggable;
 import ru.aston.UserServiceAPI.Utils.NotValidUserException;
 import ru.aston.UserServiceAPI.Utils.UserDTOValidator;
 import ru.aston.UserServiceAPI.Utils.UserNotFoundException;
@@ -21,6 +22,7 @@ import static ru.aston.UserServiceAPI.Utils.ErrorMessageConverter.convertToMessa
 
 @RestController
 @RequestMapping ("/user")
+@Loggable
 public class UserController {
 
     private final UserService userService;

@@ -49,4 +49,13 @@ public class UserDTOIn {
     public void setAge(int age) {
         this.age = age;
     }
+
+    @Override
+    public String toString() {
+        String sb = "UserDTOIn{" + "name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", age=" + age +
+                '}';
+        return sb;
+    }
 }

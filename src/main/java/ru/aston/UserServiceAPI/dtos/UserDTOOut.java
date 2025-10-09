@@ -68,4 +68,14 @@ public class UserDTOOut {
     public int hashCode() {
         return Objects.hash(id,name,email,age);
     }
+
+    @Override
+    public String toString() {
+        String sb = "UserDTOOut{" + "id=" + id +
+                ", name='" + name + '\'' +
+                ", email='" + email + '\'' +
+                ", age=" + age +
+                '}';
+        return sb;
+    }
 }

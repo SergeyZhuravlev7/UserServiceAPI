@@ -63,6 +63,5 @@ public class LoggingAspect {
                          .append(".");
         }
         logger.error("Method {}() throw exception. Method args: {}",methodName,argsWithTypes);
-        System.out.println();
     }
 }

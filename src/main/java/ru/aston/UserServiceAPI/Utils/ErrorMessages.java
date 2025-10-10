@@ -1,9 +1,10 @@
 package ru.aston.UserServiceAPI.Utils;
 
 public enum ErrorMessages {
-    NOT_READABLE("Request body should not be empty, and should contains name, email, age."),USER_NOT_FOUND(
-            "Sorry, but user with current parameters was not found"),BAD_REQUEST(
-            "Request should contains required parameters"),UNKNOWN_EXCEPTION("Something went wrong"),
+    BAD_REQUEST("Request should contains required parameters"),
+    NOT_READABLE("Request body should not be empty, and should contains name, email, age."),
+    UNKNOWN_EXCEPTION("Something went wrong"),
+    USER_NOT_FOUND("Sorry, but user with current parameters was not found"),
     ;
 
     private final String message;

@@ -36,35 +36,26 @@ public class UserController {
 
     @GetMapping
     public ResponseEntity<UserDTOOut> getUser(@RequestParam (required = false) Long id,
-                                              @RequestParam (required = false) String name,
-                                              @RequestParam (required = false) String email) {
-        User findedUser = null;
+            @RequestParam (required = false) String name,
+            @RequestParam (required = false) String email) {
+        Optional<User> findedUser = Optional.empty();
         if (id != null && id > 0) {
-            Optional<User> userOptional = userService.getUserById(id);
-            if (userOptional.isPresent()) {
-                findedUser = userOptional.get();
-            }
+            findedUser = userService.getUserById(id);
         } else if (name != null && ! name.isBlank()) {
-            Optional<User> userOptional = userService.getUserByName(name);
-            if (userOptional.isPresent()) {
-                findedUser = userOptional.get();
-            }
+            findedUser = userService.getUserByName(name);
         } else if (email != null && ! email.isBlank()) {
-            Optional<User> userOptional = userService.getUserByEmail(email);
-            if (userOptional.isPresent()) {
-                findedUser = userOptional.get();
-            }
+            findedUser = userService.getUserByEmail(email);
         }
-        if (findedUser != null) {
-            return new ResponseEntity<>(userService.getDTOFromUser(findedUser),HttpStatus.OK);
+        if (findedUser.isPresent()) {
+            return new ResponseEntity<>(userService.getDTOFromUser(findedUser.get()),HttpStatus.OK);
         }
         throw new UserNotFoundException();
     }
 
     @GetMapping ("/all")
     public ResponseEntity<List<UserDTOOut>> getAllUsers(@RequestParam (required = false) Integer page,
-                                                        @RequestParam (required = false) Integer size,
-                                                        @RequestParam (required = false) String sort) {
+            @RequestParam (required = false) Integer size,
+            @RequestParam (required = false) String sort) {
         List<UserDTOOut> userDTOOutList;
         boolean sortNotNullAndEqAscOrDesc = sort != null && (sort.equals("asc") || sort.equals("desc"));
         if (page != null && page >= 0 && size != null && size > 0) {
@@ -101,8 +92,8 @@ public class UserController {
 
     @PutMapping
     public ResponseEntity<UserDTOOut> updateUser(@RequestParam Long id,
-                                                 @RequestBody @Valid UserDTOIn userDTOIn,
-                                                 BindingResult bindingResult) {
+            @RequestBody @Valid UserDTOIn userDTOIn,
+            BindingResult bindingResult) {
         validator.validate(userDTOIn,bindingResult);
         if (bindingResult.hasErrors() || id == null || id <= 0)
             throw new NotValidUserException(convertToMessage(bindingResult));

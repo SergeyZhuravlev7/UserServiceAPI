@@ -2,12 +2,7 @@ package ru.aston.UserServiceAPI.services;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
-import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Isolation;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 import ru.aston.UserServiceAPI.Utils.Updatable;
 import ru.aston.UserServiceAPI.dtos.UserDTOIn;
@@ -19,13 +14,11 @@ import java.util.List;
 import java.util.Optional;
 
 @Service
-@Transactional (readOnly = true,
-        propagation = Propagation.REQUIRED,
-        isolation = Isolation.READ_COMMITTED)
 public class UserServiceImpl implements UserService {
 
     private final UserRepository userRepository;
     private final ObjectMapper objectMapper;
+    private final PaginationService paginationService;
 
     private String defaultSort = "asc";
     private int defaultPage = 0;
@@ -33,43 +26,39 @@ public class UserServiceImpl implements UserService {
 
 
     @Autowired
-    public UserServiceImpl(UserRepository userRepository,ObjectMapper objectMapper) {
+    public UserServiceImpl(UserRepository userRepository,ObjectMapper objectMapper,PaginationService paginationService) {
         this.userRepository = userRepository;
         this.objectMapper = objectMapper;
+        this.paginationService = paginationService;
     }
 
+    @Transactional (readOnly = true)
     public Optional<User> getUserById(Long id) {
         return userRepository.findById(id);
     }
 
-    @Transactional (isolation = Isolation.SERIALIZABLE)
     public List<UserDTOOut> getAllUsersWithPaginationAndSort(int page,int count,String sort) {
-        Page<User> userList;
-        if (sort.equals("asc")) {
-            userList = userRepository.findAll(PageRequest.of(page,count,Sort.by("id").ascending()));
-        } else userList = userRepository.findAll(PageRequest.of(page,count,Sort.by("id").descending()));
-        return userList.stream().map(this::getDTOFromUser).toList();
+        return paginationService.getAllUsersWithPaginationAndSort(page,count,sort);
     }
 
-    @Transactional (propagation = Propagation.NEVER)
     public List<UserDTOOut> getAllUsersWithPagination(int page,int count) {
         return getAllUsersWithPaginationAndSort(page,count,defaultSort);
     }
 
-    @Transactional (propagation = Propagation.NEVER)
     public List<UserDTOOut> getAllUsersDefaultWithSort(String sort) {
         return getAllUsersWithPaginationAndSort(defaultPage,defaultSize,sort);
     }
 
-    @Transactional (propagation = Propagation.NEVER)
     public List<UserDTOOut> getAllUsersDefault() {
         return getAllUsersWithPaginationAndSort(defaultPage,defaultSize,defaultSort);
     }
 
+    @Transactional (readOnly = true)
     public Optional<User> getUserByName(String name) {
         return userRepository.findByName(name);
     }
 
+    @Transactional (readOnly = true)
     public Optional<User> getUserByEmail(String email) {
         return userRepository.findByEmail(email);
     }
@@ -82,14 +71,14 @@ public class UserServiceImpl implements UserService {
         return objectMapper.convertValue(user,UserDTOOut.class);
     }
 
-    @Transactional (readOnly = false)
+    @Transactional
     @Updatable
     public UserDTOOut createUser(UserDTOIn userDTOIn) {
         User user = userRepository.save(getUserFromDTO(userDTOIn));
         return objectMapper.convertValue(user,UserDTOOut.class);
     }
 
-    @Transactional (readOnly = false)
+    @Transactional
     public Optional<UserDTOOut> deleteUserById(Long id) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isPresent()) {
@@ -99,7 +88,7 @@ public class UserServiceImpl implements UserService {
         return Optional.empty();
     }
 
-    @Transactional (readOnly = false)
+    @Transactional
     public Optional<UserDTOOut> updateUser(Long id,UserDTOIn userDTOIn) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isPresent()) {

@@ -29,12 +29,12 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler (HttpMessageNotReadableException.class)
     public ResponseEntity<Map<String, String>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-        return new ResponseEntity<>(getErrorMap(ErrorMessages.NotReadable.getMessage()),HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(getErrorMap(ErrorMessages.NOT_READABLE.getMessage()),HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler (ServletRequestBindingException.class)
     public ResponseEntity<Map<String, String>> handleServletRequestBindingException(ServletRequestBindingException ex) {
-        return new ResponseEntity<>(getErrorMap(ErrorMessages.BadRequest.getMessage()),HttpStatus.BAD_REQUEST);
+        return new ResponseEntity<>(getErrorMap(ErrorMessages.BAD_REQUEST.getMessage()),HttpStatus.BAD_REQUEST);
     }
 
     @ExceptionHandler (HttpRequestMethodNotSupportedException.class)
@@ -44,13 +44,16 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler (Exception.class)
     public ResponseEntity<Map<String, String>> handleUnknownException(Exception ex) {
-        return new ResponseEntity<>(getErrorMap(ErrorMessages.UnknownException.getMessage()),HttpStatus.INTERNAL_SERVER_ERROR);
+        return new ResponseEntity<>(getErrorMap(ErrorMessages.UNKNOWN_EXCEPTION.getMessage()),
+                                    HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private Map<String, String> getErrorMap(String message) {
         Map<String, String> map = new HashMap<>();
         map.put("Error message",message);
-        map.put("timestamp",LocalDateTime.now().toString());
+        map.put("timestamp",
+                LocalDateTime.now()
+                             .toString());
         return map;
     }
 }

@@ -6,7 +6,7 @@ import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 @Aspect
@@ -15,30 +15,31 @@ public class LoggingAspect {
 
     //Логгирующий аспект, но тут смысл уже есть)))))
 
-    private final Logger userServiceLogger;
-
-    @Autowired
-    LoggingAspect(Logger userServiceLogger) {
-        this.userServiceLogger = userServiceLogger;
-    }
-
     @Around (value = "@annotation(org.springframework.transaction.annotation.Transactional)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
-        String methodName = joinPoint.getSignature().getName();
+        Logger logger = LoggerFactory.getLogger(joinPoint.getTarget()
+                                                         .getClass());
+        String methodName = joinPoint.getSignature()
+                                     .getName();
         StringBuilder argsWithTypes = new StringBuilder();
         for (Object arg : args) {
-            argsWithTypes.append(arg.getClass().getSimpleName()).append(" ").append(arg).append(" , ");
+            argsWithTypes.append(arg.getClass()
+                                    .getSimpleName())
+                         .append(" ")
+                         .append(arg)
+                         .append(" | ");
         }
-        userServiceLogger.info("Called transactional method: {}(). Method args: {}\nOpen transaction...",methodName,argsWithTypes.substring(0,argsWithTypes.length() - 2));
+        logger.info("Called transactional method: {}(). Method args: {}.",methodName,argsWithTypes);
+        logger.info("Open transaction...");
         Object result = null;
         try {
             result = joinPoint.proceed();
-            userServiceLogger.info("Successful method call. Result: {}.\n",result);
+            logger.info("Successful method call. Result: {}.",result);
         } catch (Throwable ex) {
-            userServiceLogger.error("Transactional method execution exception: {}\n",ex.getMessage());
+            logger.error("Transactional method execution exception: {}",ex.getMessage());
         } finally {
-            userServiceLogger.info("Closing transaction...");
+            logger.info("Closing transaction...");
         }
         return result;
     }
@@ -46,12 +47,22 @@ public class LoggingAspect {
     @AfterThrowing (value = "@within(ru.aston.UserServiceAPI.Utils.Loggable)")
     public void afterThrowing(JoinPoint joinPoint) throws Throwable {
         Object[] args = joinPoint.getArgs();
-        String methodName = joinPoint.getSignature().getName();
+        String methodName = joinPoint.getSignature()
+                                     .getName();
+        Logger logger = LoggerFactory.getLogger(joinPoint.getTarget()
+                                                         .getClass());
         StringBuilder argsWithTypes = new StringBuilder();
         for (Object arg : args) {
-            if (arg.getClass().getSimpleName().contains("BindingResult")) continue;
-            argsWithTypes.append(arg.getClass().getSimpleName()).append(" ").append(arg).append(".");
+            if (arg == null || arg.getClass()
+                                  .getSimpleName()
+                                  .contains("BindingResult")) continue;
+            argsWithTypes.append(arg.getClass()
+                                    .getSimpleName())
+                         .append(" ")
+                         .append(arg)
+                         .append(".");
         }
-        userServiceLogger.error("Method {}() throw exception. Method args: {}",methodName,argsWithTypes.substring(0,argsWithTypes.length() - 1));
+        logger.error("Method {}() throw exception. Method args: {}",methodName,argsWithTypes);
+        System.out.println();
     }
 }

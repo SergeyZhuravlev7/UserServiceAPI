@@ -60,10 +60,6 @@ class UserControllerUnitTest {
         }
     }
 
-    private static Stream<Arguments> invalidUserArgsMethodSource() {
-        return Stream.of(Arguments.of(null,null,null),Arguments.of(0L,"",null),Arguments.of(Long.MIN_VALUE,null,null),Arguments.of(0L,"",""),Arguments.of(0L,null,""));
-    }
-
     @BeforeEach
     void setUp() {
         validUserDTOIn = new UserDTOIn("SomeName","someemail@gmail.com",30);
@@ -111,7 +107,9 @@ class UserControllerUnitTest {
         when(userService.getUserById(validUser.getId())).thenReturn(Optional.of(validUser));
         when(userService.getDTOFromUser(validUser)).thenReturn(validUserDTOOut);
 
-        ResponseEntity<UserDTOOut> response = userController.getUser(validUser.getId(),validUser.getName(),validUser.getEmail());
+        ResponseEntity<UserDTOOut> response = userController.getUser(validUser.getId(),
+                                                                     validUser.getName(),
+                                                                     validUser.getEmail());
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
         assertEquals(validUserDTOOut,response.getBody());
@@ -254,5 +252,13 @@ class UserControllerUnitTest {
         when(bindingResult.hasErrors()).thenReturn(true);
 
         assertThrows(NotValidUserException.class,() -> userController.updateUser(id,validUserDTOIn,bindingResult));
+    }
+
+    private static Stream<Arguments> invalidUserArgsMethodSource() {
+        return Stream.of(Arguments.of(null,null,null),
+                         Arguments.of(0L,"",null),
+                         Arguments.of(Long.MIN_VALUE,null,null),
+                         Arguments.of(0L,"",""),
+                         Arguments.of(0L,null,""));
     }
 }

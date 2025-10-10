@@ -61,7 +61,7 @@ public class UserDTOOut {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         UserDTOOut that = (UserDTOOut) o;
-        return age == that.age && Objects.equals(id,that.id) && Objects.equals(name,that.name) && Objects.equals(email,that.email);
+        return age == that.age && Objects.equals(id,that.id) && Objects.equals(name,that.name) && Objects.equals(email, that.email);
     }
 
     @Override
@@ -71,11 +71,6 @@ public class UserDTOOut {
 
     @Override
     public String toString() {
-        String sb = "UserDTOOut{" + "id=" + id +
-                ", name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", age=" + age +
-                '}';
-        return sb;
+        return "UserDTOOut{" + "id=" + id + ", name='" + name + '\'' + ", email='" + email + '\'' + ", age=" + age + '}';
     }
 }

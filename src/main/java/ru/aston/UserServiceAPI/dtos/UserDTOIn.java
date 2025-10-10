@@ -52,10 +52,6 @@ public class UserDTOIn {
 
     @Override
     public String toString() {
-        String sb = "UserDTOIn{" + "name='" + name + '\'' +
-                ", email='" + email + '\'' +
-                ", age=" + age +
-                '}';
-        return sb;
+        return "UserDTOIn{" + "name='" + name + '\'' + ", email='" + email + '\'' + ", age=" + age + '}';
     }
 }

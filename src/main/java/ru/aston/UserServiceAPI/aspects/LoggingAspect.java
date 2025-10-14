@@ -7,28 +7,45 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 
 @Aspect
 @Component
 public class LoggingAspect {
 
+    private final Environment env;
+
+    @Autowired
+    public LoggingAspect(Environment env) {
+        this.env = env;
+    }
+
     //Логгирующий аспект, но тут смысл уже есть)))))
 
     @Around (value = "@annotation(org.springframework.transaction.annotation.Transactional)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+        for (String s : env.getActiveProfiles()) {
+            if (s.equalsIgnoreCase("test")) return joinPoint.proceed();
+        }
         Object[] args = joinPoint.getArgs();
-        Logger logger = LoggerFactory.getLogger(joinPoint.getTarget()
-                                                         .getClass());
-        String methodName = joinPoint.getSignature()
-                                     .getName();
+        Logger logger = LoggerFactory.getLogger(joinPoint
+                .getTarget()
+                .getClass());
+        String methodName = joinPoint
+                .getSignature()
+                .getName();
         StringBuilder argsWithTypes = new StringBuilder();
         for (Object arg : args) {
-            argsWithTypes.append(arg.getClass()
-                                    .getSimpleName())
-                         .append(" ")
-                         .append(arg)
-                         .append(" | ");
+            argsWithTypes
+                    .append(arg
+                            .getClass()
+                            .getSimpleName())
+                    .append(" ")
+                    .append(arg)
+                    .append(" | ")
+            ;
         }
         logger.info("Called transactional method: {}(). Method args: {}.",methodName,argsWithTypes);
         logger.info("Open transaction...");
@@ -46,21 +63,30 @@ public class LoggingAspect {
 
     @AfterThrowing (value = "@within(ru.aston.UserServiceAPI.Utils.Loggable)")
     public void afterThrowing(JoinPoint joinPoint) throws Throwable {
+        for (String s : env.getActiveProfiles()) {
+            if (s.equalsIgnoreCase("test")) return;
+        }
         Object[] args = joinPoint.getArgs();
-        String methodName = joinPoint.getSignature()
-                                     .getName();
-        Logger logger = LoggerFactory.getLogger(joinPoint.getTarget()
-                                                         .getClass());
+        String methodName = joinPoint
+                .getSignature()
+                .getName();
+        Logger logger = LoggerFactory.getLogger(joinPoint
+                .getTarget()
+                .getClass());
         StringBuilder argsWithTypes = new StringBuilder();
         for (Object arg : args) {
-            if (arg == null || arg.getClass()
-                                  .getSimpleName()
-                                  .contains("BindingResult")) continue;
-            argsWithTypes.append(arg.getClass()
-                                    .getSimpleName())
-                         .append(" ")
-                         .append(arg)
-                         .append(".");
+            if (arg == null || arg
+                    .getClass()
+                    .getSimpleName()
+                    .contains("BindingResult")) continue;
+            argsWithTypes
+                    .append(arg
+                            .getClass()
+                            .getSimpleName())
+                    .append(" ")
+                    .append(arg)
+                    .append(".")
+            ;
         }
         logger.error("Method {}() throw exception. Method args: {}",methodName,argsWithTypes);
     }

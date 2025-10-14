@@ -14,6 +14,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.validation.BindingResult;
 import ru.aston.UserServiceAPI.Utils.NotValidUserException;
 import ru.aston.UserServiceAPI.Utils.UserDTOValidator;
@@ -34,6 +35,7 @@ import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.*;
 
 @ExtendWith (MockitoExtension.class)
+@ActiveProfiles ("test")
 class UserControllerUnitTest {
 
     static List<UserDTOOut> userDTOOutList;

@@ -13,6 +13,7 @@ import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
 import org.springframework.test.annotation.Commit;
 import org.springframework.test.annotation.DirtiesContext;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
@@ -42,6 +43,7 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @Transactional
 @TestInstance (TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext (classMode = DirtiesContext.ClassMode.AFTER_CLASS)
+@ActiveProfiles("test")
 class UserControllerIntegrationTest {
 
     @Container

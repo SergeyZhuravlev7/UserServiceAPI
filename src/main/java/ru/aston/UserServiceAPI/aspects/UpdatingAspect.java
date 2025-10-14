@@ -6,6 +6,7 @@ import org.aspectj.lang.annotation.Aspect;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
 import ru.aston.UserServiceAPI.dtos.UserDTOOut;
 import ru.aston.UserServiceAPI.entitys.User;
@@ -19,17 +20,23 @@ public class UpdatingAspect {
     //Сделан просто ради того чтобы лучше понять аспекты
 
     private final UserRepository userRepository;
+    private final Environment env;
 
     @Autowired
-    public UpdatingAspect(UserRepository userRepository) {
+    public UpdatingAspect(UserRepository userRepository,Environment env) {
         this.userRepository = userRepository;
+        this.env = env;
     }
 
     @Around (value = "@annotation(ru.aston.UserServiceAPI.Utils.Updatable)")
     public Object around(ProceedingJoinPoint joinPoint) throws Throwable {
+        for (String s : env.getActiveProfiles()) {
+            if (s.equalsIgnoreCase("test")) return joinPoint.proceed();
+        }
         Object result = joinPoint.proceed();
-        Logger logger = LoggerFactory.getLogger(joinPoint.getTarget()
-                                                         .getClass());
+        Logger logger = LoggerFactory.getLogger(joinPoint
+                .getTarget()
+                .getClass());
         if (result instanceof UserDTOOut) {
             long id = ((UserDTOOut) result).getId();
             User user = userRepository.getReferenceById(id);

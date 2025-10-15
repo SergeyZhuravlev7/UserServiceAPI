@@ -15,3 +15,6 @@ spring:
     generate-ddl: true
     hibernate:
       ddl-auto: create-drop
+notifications:
+  boot_strap_server: localhost:9092
+  topic: notifications

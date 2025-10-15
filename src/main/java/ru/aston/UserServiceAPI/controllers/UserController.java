@@ -13,6 +13,9 @@ import ru.aston.UserServiceAPI.Utils.UserNotFoundException;
 import ru.aston.UserServiceAPI.dtos.UserDTOIn;
 import ru.aston.UserServiceAPI.dtos.UserDTOOut;
 import ru.aston.UserServiceAPI.entitys.User;
+import ru.aston.UserServiceAPI.kafka.CreatedKafkaMessage;
+import ru.aston.UserServiceAPI.kafka.DeletedKafkaMessage;
+import ru.aston.UserServiceAPI.kafka.ProducerService;
 import ru.aston.UserServiceAPI.services.UserService;
 
 import java.util.List;
@@ -27,11 +30,13 @@ public class UserController {
 
     private final UserService userService;
     private final UserDTOValidator validator;
+    private final ProducerService producerService;
 
     @Autowired
-    public UserController(UserService userService,UserDTOValidator validator) {
+    public UserController(UserService userService,UserDTOValidator validator, ProducerService producerService) {
         this.userService = userService;
         this.validator = validator;
+        this.producerService = producerService;
     }
 
     @GetMapping
@@ -79,6 +84,7 @@ public class UserController {
         validator.validate(userDTOIn,bindingResult);
         if (bindingResult.hasErrors()) throw new NotValidUserException(convertToMessage(bindingResult));
         UserDTOOut userDTOOut = userService.createUser(userDTOIn);
+        producerService.send(new CreatedKafkaMessage(userDTOOut.getEmail()));
         return new ResponseEntity<>(userDTOOut,HttpStatus.OK);
     }
 
@@ -87,6 +93,8 @@ public class UserController {
         if (id == null || id <= 0) throw new UserNotFoundException();
         Optional<UserDTOOut> userDTOOutOptional = userService.deleteUserById(id);
         if (userDTOOutOptional.isEmpty()) throw new UserNotFoundException();
+        UserDTOOut userDTOOut = userDTOOutOptional.get();
+        producerService.send(new DeletedKafkaMessage(userDTOOut.getEmail()));
         return new ResponseEntity<>(userDTOOutOptional.get(),HttpStatus.OK);
     }
 

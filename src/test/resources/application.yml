@@ -4,3 +4,6 @@ spring:
     generate-ddl: true
     hibernate:
       ddl-auto: create-drop
+notifications:
+  topic: testNotifications
+  boot_strap_server:

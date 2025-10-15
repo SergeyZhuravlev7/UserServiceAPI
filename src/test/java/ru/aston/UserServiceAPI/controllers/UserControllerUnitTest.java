@@ -22,6 +22,8 @@ import ru.aston.UserServiceAPI.Utils.UserNotFoundException;
 import ru.aston.UserServiceAPI.dtos.UserDTOIn;
 import ru.aston.UserServiceAPI.dtos.UserDTOOut;
 import ru.aston.UserServiceAPI.entitys.User;
+import ru.aston.UserServiceAPI.kafka.ProducerService;
+import ru.aston.UserServiceAPI.kafka.Sendable;
 import ru.aston.UserServiceAPI.services.UserService;
 
 import java.util.ArrayList;
@@ -47,6 +49,8 @@ class UserControllerUnitTest {
     private UserService userService;
     @Mock
     private UserDTOValidator userDTOValidator;
+    @Mock
+    private ProducerService producerService;
     @InjectMocks
     private UserController userController;
 
@@ -110,8 +114,8 @@ class UserControllerUnitTest {
         when(userService.getDTOFromUser(validUser)).thenReturn(validUserDTOOut);
 
         ResponseEntity<UserDTOOut> response = userController.getUser(validUser.getId(),
-                                                                     validUser.getName(),
-                                                                     validUser.getEmail());
+                validUser.getName(),
+                validUser.getEmail());
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
         assertEquals(validUserDTOOut,response.getBody());
@@ -174,6 +178,10 @@ class UserControllerUnitTest {
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(false);
         when(userService.createUser(validUserDTOIn)).thenReturn(validUserDTOOut);
+        doNothing()
+                .when(producerService)
+                .send(any(Sendable.class))
+        ;
 
         ResponseEntity<UserDTOOut> response = userController.createUser(validUserDTOIn,bindingResult);
 
@@ -209,6 +217,10 @@ class UserControllerUnitTest {
     @CsvSource (value = {"1","2","3","4"})
     void deleteUserShouldReturnEntityWithDeletedUser(Long id) throws Exception {
         when(userService.deleteUserById(id)).thenReturn(Optional.of(validUserDTOOut));
+        doNothing()
+                .when(producerService)
+                .send(any(Sendable.class))
+        ;
 
         ResponseEntity<UserDTOOut> response = userController.deleteUser(id);
 
@@ -258,9 +270,9 @@ class UserControllerUnitTest {
 
     private static Stream<Arguments> invalidUserArgsMethodSource() {
         return Stream.of(Arguments.of(null,null,null),
-                         Arguments.of(0L,"",null),
-                         Arguments.of(Long.MIN_VALUE,null,null),
-                         Arguments.of(0L,"",""),
-                         Arguments.of(0L,null,""));
+                Arguments.of(0L,"",null),
+                Arguments.of(Long.MIN_VALUE,null,null),
+                Arguments.of(0L,"",""),
+                Arguments.of(0L,null,""));
     }
 }

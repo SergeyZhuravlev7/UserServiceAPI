@@ -2,6 +2,7 @@ package ru.aston.UserServiceAPI.aspects;
 
 import org.aspectj.lang.JoinPoint;
 import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.After;
 import org.aspectj.lang.annotation.AfterThrowing;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
@@ -89,5 +90,31 @@ public class LoggingAspect {
             ;
         }
         logger.error("Method {}() throw exception. Method args: {}",methodName,argsWithTypes);
+    }
+
+    @After (value = "execution(* ru.aston.UserServiceAPI.kafka.ProducerService.*(..))")
+    public void after(JoinPoint joinPoint) throws Throwable {
+        for (String s : env.getActiveProfiles()) {
+            if (s.equalsIgnoreCase("test")) return;
+        }
+        Object[] args = joinPoint.getArgs();
+        String methodName = joinPoint
+                .getSignature()
+                .getName();
+        Logger logger = LoggerFactory.getLogger(joinPoint
+                .getTarget()
+                .getClass());
+        StringBuilder argsWithTypes = new StringBuilder();
+        for (Object arg : args) {
+            argsWithTypes
+                    .append(arg
+                            .getClass()
+                            .getSimpleName())
+                    .append(" ")
+                    .append(arg)
+                    .append(".")
+            ;
+        }
+        logger.info("Method {}() call. Method args: {}",methodName,argsWithTypes);
     }
 }

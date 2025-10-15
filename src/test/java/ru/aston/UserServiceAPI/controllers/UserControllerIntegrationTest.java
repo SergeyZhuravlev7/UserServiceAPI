@@ -2,6 +2,9 @@ package ru.aston.UserServiceAPI.controllers;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import org.apache.kafka.clients.consumer.Consumer;
+import org.apache.kafka.clients.consumer.ConsumerRecord;
+import org.apache.kafka.clients.consumer.ConsumerRecords;
 import org.junit.jupiter.api.*;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.*;
@@ -11,27 +14,37 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
 import org.springframework.http.MediaType;
 import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.kafka.core.KafkaTemplate;
 import org.springframework.test.annotation.Commit;
 import org.springframework.test.annotation.DirtiesContext;
 import org.springframework.test.context.ActiveProfiles;
+import org.springframework.test.context.DynamicPropertyRegistry;
+import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.context.bean.override.mockito.MockitoSpyBean;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.transaction.annotation.Transactional;
 import org.testcontainers.containers.PostgreSQLContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import org.testcontainers.kafka.KafkaContainer;
 import ru.aston.UserServiceAPI.Utils.ErrorMessages;
 import ru.aston.UserServiceAPI.Utils.UserDTOValidator;
 import ru.aston.UserServiceAPI.dtos.UserDTOIn;
 import ru.aston.UserServiceAPI.dtos.UserDTOOut;
+import ru.aston.UserServiceAPI.kafka.Sendable;
 import ru.aston.UserServiceAPI.repos.UserRepository;
+import ru.aston.UserServiceAPI.kafka.ProducerService;
 import ru.aston.UserServiceAPI.services.UserService;
 
+import java.time.Duration;
+import java.time.temporal.ChronoUnit;
 import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
@@ -43,9 +56,11 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 @Transactional
 @TestInstance (TestInstance.Lifecycle.PER_CLASS)
 @DirtiesContext (classMode = DirtiesContext.ClassMode.AFTER_CLASS)
-@ActiveProfiles("test")
-class UserControllerIntegrationTest {
+@ActiveProfiles ("test")
+public class UserControllerIntegrationTest {
 
+    @Container
+    public static KafkaContainer kafkaContainer = new KafkaContainer("apache/kafka:4.1.0");
     @Container
     @ServiceConnection
     static PostgreSQLContainer postgreSQLContainer = new PostgreSQLContainer("postgres:18")
@@ -54,8 +69,11 @@ class UserControllerIntegrationTest {
             .withPassword("postgres")
             ;
 
-    String USER_NOT_FOUND_ERROR = ErrorMessages.USER_NOT_FOUND.getMessage();
+    static {
+        kafkaContainer.start();
+    }
 
+    String USER_NOT_FOUND_ERROR = ErrorMessages.USER_NOT_FOUND.getMessage();
     @Autowired
     private UserRepository userRepository;
     @MockitoSpyBean
@@ -68,6 +86,17 @@ class UserControllerIntegrationTest {
     private ObjectMapper objectMapper;
     @Autowired
     private JdbcTemplate jdbcTemplate;
+    @MockitoSpyBean
+    private ProducerService producerService;
+    @Autowired
+    private KafkaTemplate<String, String> kafkaTemplate;
+    @Autowired
+    private Consumer<String, String> consumer;
+
+    @DynamicPropertySource
+    static void properties(DynamicPropertyRegistry registry) {
+        registry.add("notifications.boot_strap_server",kafkaContainer::getBootstrapServers);
+    }
 
     @BeforeAll
     @Commit
@@ -186,6 +215,7 @@ class UserControllerIntegrationTest {
         UserDTOOut actualUser = objectMapper.readValue(response
                 .getResponse()
                 .getContentAsString(),UserDTOOut.class);
+        ConsumerRecords<String, String> records = consumer.poll(Duration.of(1,ChronoUnit.SECONDS));
 
         assertEquals(200,response
                 .getResponse()
@@ -193,6 +223,12 @@ class UserControllerIntegrationTest {
         assertEquals(validUserDTOIn.getName(),actualUser.getName());
         assertEquals(validUserDTOIn.getEmail(),actualUser.getEmail());
         assertEquals(validUserDTOIn.getAge(),actualUser.getAge());
+        assertNotNull(records);
+        verify(producerService, times(1)).send(any(Sendable.class));
+        for (ConsumerRecord<String, String> record : records) {
+            assertEquals(validUserDTOIn.getEmail(),record.key());
+            assertEquals("created",record.value());
+        }
     }
 
     @ParameterizedTest
@@ -206,12 +242,18 @@ class UserControllerIntegrationTest {
         UserDTOOut deletedUser = objectMapper.readValue(response
                 .getResponse()
                 .getContentAsString(),UserDTOOut.class);
+        ConsumerRecords<String, String> records = consumer.poll(Duration.of(1,ChronoUnit.SECONDS));
 
         assertEquals(200,response
                 .getResponse()
                 .getStatus());
         assertEquals(deletedUser.getId(),existingId);
         verify(userService,times(1)).deleteUserById(existingId);
+        verify(producerService,times(1)).send(any(Sendable.class));
+        for (ConsumerRecord<String, String> record : records) {
+            assertEquals(deletedUser.getEmail(),record.key());
+            assertEquals("deleted",record.value());
+        }
     }
 
     @ParameterizedTest

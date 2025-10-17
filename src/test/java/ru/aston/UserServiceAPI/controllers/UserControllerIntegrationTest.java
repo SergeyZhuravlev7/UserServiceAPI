@@ -74,18 +74,12 @@ public class UserControllerIntegrationTest {
     }
 
     String USER_NOT_FOUND_ERROR = ErrorMessages.USER_NOT_FOUND.getMessage();
-    @Autowired
-    private UserRepository userRepository;
     @MockitoSpyBean
     private UserService userService;
-    @Autowired
-    private UserDTOValidator validator;
     @Autowired
     private MockMvc mockMvc;
     @Autowired
     private ObjectMapper objectMapper;
-    @Autowired
-    private JdbcTemplate jdbcTemplate;
     @MockitoSpyBean
     private ProducerService producerService;
     @Autowired
@@ -95,7 +89,7 @@ public class UserControllerIntegrationTest {
 
     @DynamicPropertySource
     static void properties(DynamicPropertyRegistry registry) {
-        registry.add("notifications.boot_strap_server",kafkaContainer::getBootstrapServers);
+        registry.add("spring.kafka.bootstrap-servers",kafkaContainer::getBootstrapServers);
     }
 
     @BeforeAll

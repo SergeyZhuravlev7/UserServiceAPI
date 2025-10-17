@@ -19,7 +19,7 @@ public class KafkaConfig {
     @Value ("${notifications.topic}")
     private String TOPIC_NAME;
 
-    @Value ("${notifications.boot_strap_server}")
+    @Value ("${spring.kafka.bootstrap-servers}")
     private String BOOTSTRAP_SERVER;
 
     @Bean

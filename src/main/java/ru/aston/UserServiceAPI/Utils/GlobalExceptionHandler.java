@@ -5,14 +5,14 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.ServletRequestBindingException;
-import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 
-@ControllerAdvice
+@RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler (UserNotFoundException.class)
@@ -45,15 +45,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler (Exception.class)
     public ResponseEntity<Map<String, String>> handleUnknownException(Exception ex) {
         return new ResponseEntity<>(getErrorMap(ErrorMessages.UNKNOWN_EXCEPTION.getMessage()),
-                                    HttpStatus.INTERNAL_SERVER_ERROR);
+                HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
     private Map<String, String> getErrorMap(String message) {
         Map<String, String> map = new HashMap<>();
         map.put("Error message",message);
         map.put("timestamp",
-                LocalDateTime.now()
-                             .toString());
+                LocalDateTime
+                        .now()
+                        .toString());
         return map;
     }
 }

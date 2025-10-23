@@ -2,6 +2,9 @@ package ru.aston.UserServiceAPI.controllers;
 
 import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.hateoas.CollectionModel;
+import org.springframework.hateoas.EntityModel;
+import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -10,9 +13,10 @@ import ru.aston.UserServiceAPI.Utils.Loggable;
 import ru.aston.UserServiceAPI.Utils.NotValidUserException;
 import ru.aston.UserServiceAPI.Utils.UserDTOValidator;
 import ru.aston.UserServiceAPI.Utils.UserNotFoundException;
-import ru.aston.UserServiceAPI.dtos.UserDTOIn;
-import ru.aston.UserServiceAPI.dtos.UserDTOOut;
+import ru.aston.UserServiceAPI.dtos.UserDTORequest;
+import ru.aston.UserServiceAPI.dtos.UserDTOResponse;
 import ru.aston.UserServiceAPI.entitys.User;
+import ru.aston.UserServiceAPI.hateoas.UserAssembler;
 import ru.aston.UserServiceAPI.kafka.CreatedKafkaMessage;
 import ru.aston.UserServiceAPI.kafka.DeletedKafkaMessage;
 import ru.aston.UserServiceAPI.kafka.ProducerService;
@@ -24,88 +28,95 @@ import java.util.Optional;
 import static ru.aston.UserServiceAPI.Utils.ErrorMessageConverter.convertToMessage;
 
 @RestController
-@RequestMapping ("/user")
+@RequestMapping (value = "/user", produces = MediaTypes.HAL_FORMS_JSON_VALUE)
 @Loggable
 public class UserController {
 
     private final UserService userService;
     private final UserDTOValidator validator;
     private final ProducerService producerService;
+    private final UserAssembler assembler;
 
     @Autowired
-    public UserController(UserService userService,UserDTOValidator validator, ProducerService producerService) {
+    public UserController(UserService userService,
+            UserDTOValidator validator,
+            ProducerService producerService,
+            UserAssembler assembler) {
         this.userService = userService;
         this.validator = validator;
         this.producerService = producerService;
+        this.assembler = assembler;
     }
 
     @GetMapping
-    public ResponseEntity<UserDTOOut> getUser(@RequestParam (required = false) Long id,
+    public ResponseEntity<EntityModel<UserDTOResponse>> getUser(@RequestParam (required = false) Long id,
             @RequestParam (required = false) String name,
             @RequestParam (required = false) String email) {
-        Optional<User> findedUser = Optional.empty();
+        Optional<User> foundUser = Optional.empty();
         if (id != null && id > 0) {
-            findedUser = userService.getUserById(id);
+            foundUser = userService.getUserById(id);
         } else if (name != null && ! name.isBlank()) {
-            findedUser = userService.getUserByName(name);
+            foundUser = userService.getUserByName(name);
         } else if (email != null && ! email.isBlank()) {
-            findedUser = userService.getUserByEmail(email);
+            foundUser = userService.getUserByEmail(email);
         }
-        if (findedUser.isPresent()) {
-            return new ResponseEntity<>(userService.getDTOFromUser(findedUser.get()),HttpStatus.OK);
+        if (foundUser.isPresent()) {
+            UserDTOResponse userResponse = userService.getDTOFromUser(foundUser.get());
+            return new ResponseEntity<>(assembler.toModel(userResponse), HttpStatus.OK);
         }
         throw new UserNotFoundException();
     }
 
     @GetMapping ("/all")
-    public ResponseEntity<List<UserDTOOut>> getAllUsers(@RequestParam (required = false) Integer page,
+    public ResponseEntity<CollectionModel<EntityModel<UserDTOResponse>>> getAllUsers(@RequestParam (required = false) Integer page,
             @RequestParam (required = false) Integer size,
             @RequestParam (required = false) String sort) {
-        List<UserDTOOut> userDTOOutList;
+        List<UserDTOResponse> userDTOResponseList;
         boolean sortNotNullAndEqAscOrDesc = sort != null && (sort.equals("asc") || sort.equals("desc"));
         if (page != null && page >= 0 && size != null && size > 0) {
             if (sortNotNullAndEqAscOrDesc) {
-                userDTOOutList = userService.getAllUsersWithPaginationAndSort(page,size,sort);
+                userDTOResponseList = userService.getAllUsersWithPaginationAndSort(page,size,sort);
             } else {
-                userDTOOutList = userService.getAllUsersWithPagination(page,size);
+                userDTOResponseList = userService.getAllUsersWithPagination(page,size);
             }
         } else {
             if (sortNotNullAndEqAscOrDesc) {
-                userDTOOutList = userService.getAllUsersDefaultWithSort(sort);
+                userDTOResponseList = userService.getAllUsersDefaultWithSort(sort);
             } else {
-                userDTOOutList = userService.getAllUsersDefault();
+                userDTOResponseList = userService.getAllUsersDefault();
             }
         }
-        return new ResponseEntity<>(userDTOOutList,HttpStatus.OK);
+        return new ResponseEntity<>(assembler.toCollectionModel(userDTOResponseList), HttpStatus.OK);
     }
 
     @PostMapping
-    public ResponseEntity<UserDTOOut> createUser(@RequestBody @Valid UserDTOIn userDTOIn,BindingResult bindingResult) {
-        validator.validate(userDTOIn,bindingResult);
+    public ResponseEntity<UserDTOResponse> createUser(@RequestBody @Valid UserDTORequest userDTORequest,
+            BindingResult bindingResult) {
+        validator.validate(userDTORequest,bindingResult);
         if (bindingResult.hasErrors()) throw new NotValidUserException(convertToMessage(bindingResult));
-        UserDTOOut userDTOOut = userService.createUser(userDTOIn);
-        producerService.send(new CreatedKafkaMessage(userDTOOut.getEmail()));
-        return new ResponseEntity<>(userDTOOut,HttpStatus.OK);
+        UserDTOResponse userDTOResponse = userService.createUser(userDTORequest);
+        producerService.send(new CreatedKafkaMessage(userDTOResponse.getEmail()));
+        return new ResponseEntity<>(userDTOResponse,HttpStatus.OK);
     }
 
     @DeleteMapping
-    public ResponseEntity<UserDTOOut> deleteUser(@RequestParam Long id) {
+    public ResponseEntity<UserDTOResponse> deleteUser(@RequestParam Long id) {
         if (id == null || id <= 0) throw new UserNotFoundException();
-        Optional<UserDTOOut> userDTOOutOptional = userService.deleteUserById(id);
+        Optional<UserDTOResponse> userDTOOutOptional = userService.deleteUserById(id);
         if (userDTOOutOptional.isEmpty()) throw new UserNotFoundException();
-        UserDTOOut userDTOOut = userDTOOutOptional.get();
-        producerService.send(new DeletedKafkaMessage(userDTOOut.getEmail()));
+        UserDTOResponse userDTOResponse = userDTOOutOptional.get();
+        producerService.send(new DeletedKafkaMessage(userDTOResponse.getEmail()));
         return new ResponseEntity<>(userDTOOutOptional.get(),HttpStatus.OK);
     }
 
     @PutMapping
-    public ResponseEntity<UserDTOOut> updateUser(@RequestParam Long id,
-            @RequestBody @Valid UserDTOIn userDTOIn,
+    public ResponseEntity<UserDTOResponse> updateUser(@RequestParam Long id,
+            @RequestBody @Valid UserDTORequest userDTORequest,
             BindingResult bindingResult) {
-        validator.validate(userDTOIn,bindingResult);
+        validator.validate(userDTORequest,bindingResult);
         if (bindingResult.hasErrors() || id == null || id <= 0)
             throw new NotValidUserException(convertToMessage(bindingResult));
-        Optional<UserDTOOut> userDTOOutOptional = userService.updateUser(id,userDTOIn);
+        Optional<UserDTOResponse> userDTOOutOptional = userService.updateUser(id,userDTORequest);
         if (userDTOOutOptional.isEmpty()) throw new UserNotFoundException();
         return new ResponseEntity<>(userDTOOutOptional.get(),HttpStatus.OK);
     }

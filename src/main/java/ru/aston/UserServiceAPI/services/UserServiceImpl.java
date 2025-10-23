@@ -5,8 +5,8 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import ru.aston.UserServiceAPI.Utils.Updatable;
-import ru.aston.UserServiceAPI.dtos.UserDTOIn;
-import ru.aston.UserServiceAPI.dtos.UserDTOOut;
+import ru.aston.UserServiceAPI.dtos.UserDTORequest;
+import ru.aston.UserServiceAPI.dtos.UserDTOResponse;
 import ru.aston.UserServiceAPI.entitys.User;
 import ru.aston.UserServiceAPI.repos.UserRepository;
 
@@ -37,19 +37,19 @@ public class UserServiceImpl implements UserService {
         return userRepository.findById(id);
     }
 
-    public List<UserDTOOut> getAllUsersWithPaginationAndSort(int page,int count,String sort) {
+    public List<UserDTOResponse> getAllUsersWithPaginationAndSort(int page,int count,String sort) {
         return paginationService.getAllUsersWithPaginationAndSort(page,count,sort);
     }
 
-    public List<UserDTOOut> getAllUsersWithPagination(int page,int count) {
+    public List<UserDTOResponse> getAllUsersWithPagination(int page,int count) {
         return getAllUsersWithPaginationAndSort(page,count,defaultSort);
     }
 
-    public List<UserDTOOut> getAllUsersDefaultWithSort(String sort) {
+    public List<UserDTOResponse> getAllUsersDefaultWithSort(String sort) {
         return getAllUsersWithPaginationAndSort(defaultPage,defaultSize,sort);
     }
 
-    public List<UserDTOOut> getAllUsersDefault() {
+    public List<UserDTOResponse> getAllUsersDefault() {
         return getAllUsersWithPaginationAndSort(defaultPage,defaultSize,defaultSort);
     }
 
@@ -63,23 +63,23 @@ public class UserServiceImpl implements UserService {
         return userRepository.findByEmail(email);
     }
 
-    public User getUserFromDTO(UserDTOIn userDTOIn) {
-        return objectMapper.convertValue(userDTOIn,User.class);
+    public User getUserFromDTO(UserDTORequest userDTORequest) {
+        return objectMapper.convertValue(userDTORequest,User.class);
     }
 
-    public UserDTOOut getDTOFromUser(User user) {
-        return objectMapper.convertValue(user,UserDTOOut.class);
+    public UserDTOResponse getDTOFromUser(User user) {
+        return objectMapper.convertValue(user,UserDTOResponse.class);
     }
 
     @Transactional
     @Updatable
-    public UserDTOOut createUser(UserDTOIn userDTOIn) {
-        User user = userRepository.save(getUserFromDTO(userDTOIn));
-        return objectMapper.convertValue(user,UserDTOOut.class);
+    public UserDTOResponse createUser(UserDTORequest userDTORequest) {
+        User user = userRepository.save(getUserFromDTO(userDTORequest));
+        return objectMapper.convertValue(user,UserDTOResponse.class);
     }
 
     @Transactional
-    public Optional<UserDTOOut> deleteUserById(Long id) {
+    public Optional<UserDTOResponse> deleteUserById(Long id) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isPresent()) {
             userRepository.deleteById(id);
@@ -89,11 +89,11 @@ public class UserServiceImpl implements UserService {
     }
 
     @Transactional
-    public Optional<UserDTOOut> updateUser(Long id,UserDTOIn userDTOIn) {
+    public Optional<UserDTOResponse> updateUser(Long id,UserDTORequest userDTORequest) {
         Optional<User> userOptional = userRepository.findById(id);
         if (userOptional.isPresent()) {
             User user = userOptional.get();
-            User updatedUser = user.updateUser(userDTOIn);
+            User updatedUser = user.updateUser(userDTORequest);
             userRepository.save(updatedUser);
             return Optional.of(getDTOFromUser(updatedUser));
         }

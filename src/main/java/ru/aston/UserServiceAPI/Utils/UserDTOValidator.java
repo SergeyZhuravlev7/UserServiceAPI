@@ -4,7 +4,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 import org.springframework.validation.Errors;
 import org.springframework.validation.Validator;
-import ru.aston.UserServiceAPI.dtos.UserDTOIn;
+import ru.aston.UserServiceAPI.dtos.UserDTORequest;
 import ru.aston.UserServiceAPI.entitys.User;
 import ru.aston.UserServiceAPI.services.UserServiceImpl;
 
@@ -22,16 +22,16 @@ public class UserDTOValidator implements Validator {
 
     @Override
     public boolean supports(Class<?> clazz) {
-        return UserDTOIn.class.equals(clazz);
+        return UserDTORequest.class.equals(clazz);
     }
 
     @Override
     public void validate(Object target,Errors errors) {
-        UserDTOIn userDTOIn = (UserDTOIn) target;
-        if (userDTOIn.getEmail() != null) {
-            Optional<User> userOptional = userService.getUserByEmail(userDTOIn.getEmail());
+        UserDTORequest userDTORequest = (UserDTORequest) target;
+        if (userDTORequest.getEmail() != null) {
+            Optional<User> userOptional = userService.getUserByEmail(userDTORequest.getEmail());
             if (userOptional.isPresent()) {
-                errors.rejectValue("email",null,"Email " + userDTOIn.getEmail() + " already exists.");
+                errors.rejectValue("email",null,"Email " + userDTORequest.getEmail() + " already exists.");
             }
         }
     }

@@ -6,5 +6,6 @@ spring:
       ddl-auto: create-drop
   kafka:
     bootstrap-servers:
+    enabled: true
 notifications:
   topic: testNotifications

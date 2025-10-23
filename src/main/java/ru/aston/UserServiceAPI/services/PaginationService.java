@@ -8,7 +8,7 @@ import org.springframework.data.domain.Sort;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Isolation;
 import org.springframework.transaction.annotation.Transactional;
-import ru.aston.UserServiceAPI.dtos.UserDTOOut;
+import ru.aston.UserServiceAPI.dtos.UserDTOResponse;
 import ru.aston.UserServiceAPI.entitys.User;
 import ru.aston.UserServiceAPI.repos.UserRepository;
 
@@ -27,7 +27,7 @@ public class PaginationService {
     }
 
     @Transactional (isolation = Isolation.SERIALIZABLE)
-    public List<UserDTOOut> getAllUsersWithPaginationAndSort(int page,int count,String sort) {
+    public List<UserDTOResponse> getAllUsersWithPaginationAndSort(int page,int count,String sort) {
         Page<User> userList;
         if (sort.equals("asc")) {
             userList = userRepository.findAll(PageRequest.of(page,count,Sort
@@ -38,7 +38,7 @@ public class PaginationService {
                 .descending()));
         return userList
                 .stream()
-                .map(user -> objectMapper.convertValue(user,UserDTOOut.class))
+                .map(user -> objectMapper.convertValue(user,UserDTOResponse.class))
                 .toList();
     }
 }

@@ -1,7 +1,7 @@
 package ru.aston.UserServiceAPI.services;
 
-import ru.aston.UserServiceAPI.dtos.UserDTOIn;
-import ru.aston.UserServiceAPI.dtos.UserDTOOut;
+import ru.aston.UserServiceAPI.dtos.UserDTORequest;
+import ru.aston.UserServiceAPI.dtos.UserDTOResponse;
 import ru.aston.UserServiceAPI.entitys.User;
 
 import java.util.List;
@@ -11,26 +11,26 @@ public interface UserService {
 
     Optional<User> getUserById(Long id);
 
-    List<UserDTOOut> getAllUsersWithPaginationAndSort(int page,int count,String sort);
+    List<UserDTOResponse> getAllUsersWithPaginationAndSort(int page,int count,String sort);
 
-    List<UserDTOOut> getAllUsersWithPagination(int page,int count);
+    List<UserDTOResponse> getAllUsersWithPagination(int page,int count);
 
-    List<UserDTOOut> getAllUsersDefaultWithSort(String sort);
+    List<UserDTOResponse> getAllUsersDefaultWithSort(String sort);
 
-    List<UserDTOOut> getAllUsersDefault();
+    List<UserDTOResponse> getAllUsersDefault();
 
     Optional<User> getUserByName(String name);
 
     Optional<User> getUserByEmail(String email);
 
-    User getUserFromDTO(UserDTOIn userDTOIn);
+    User getUserFromDTO(UserDTORequest userDTORequest);
 
-    UserDTOOut getDTOFromUser(User user);
+    UserDTOResponse getDTOFromUser(User user);
 
-    UserDTOOut createUser(UserDTOIn userDTOIn);
+    UserDTOResponse createUser(UserDTORequest userDTORequest);
 
-    Optional<UserDTOOut> deleteUserById(Long id);
+    Optional<UserDTOResponse> deleteUserById(Long id);
 
-    Optional<UserDTOOut> updateUser(Long id,UserDTOIn userDTOIn);
+    Optional<UserDTOResponse> updateUser(Long id,UserDTORequest userDTORequest);
 
 }

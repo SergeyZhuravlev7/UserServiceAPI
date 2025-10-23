@@ -2,7 +2,7 @@ package ru.aston.UserServiceAPI.dtos;
 
 import jakarta.validation.constraints.*;
 
-public class UserDTOIn {
+public class UserDTORequest {
 
     @NotNull (message = "Name cant be a null.")
     @Pattern (regexp = "^[A-Z][a-z]{2,14}$", message = "Name should start with upper case letter and should be between 3 and 15 letters.")
@@ -15,12 +15,13 @@ public class UserDTOIn {
 
     @Min (value = 18, message = "Age should be equals or greater 18 years old.")
     @Max (value = 99, message = "Age should be smaller then 100 years old.")
-    private int age;
+    @NotNull
+    private Integer age;
 
-    public UserDTOIn() {
+    public UserDTORequest() {
     }
 
-    public UserDTOIn(String name,String email,int age) {
+    public UserDTORequest(String name,String email,int age) {
         this.name = name;
         this.email = email;
         this.age = age;
@@ -52,6 +53,6 @@ public class UserDTOIn {
 
     @Override
     public String toString() {
-        return "UserDTOIn{" + "name='" + name + '\'' + ", email='" + email + '\'' + ", age=" + age + '}';
+        return "UserDTORequest{" + "name='" + name + '\'' + ", email='" + email + '\'' + ", age=" + age + '}';
     }
 }

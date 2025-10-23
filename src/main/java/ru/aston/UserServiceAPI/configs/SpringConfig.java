@@ -9,6 +9,7 @@ import org.apache.kafka.common.serialization.StringSerializer;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.hateoas.config.EnableHypermediaSupport;
 import org.springframework.kafka.config.TopicBuilder;
 import org.springframework.kafka.core.DefaultKafkaProducerFactory;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -20,12 +21,13 @@ import java.util.Map;
 
 @Configuration
 @EnableAsync
+@EnableHypermediaSupport (type = EnableHypermediaSupport.HypermediaType.HAL_FORMS)
 public class SpringConfig {
 
-    @Bean
-    public ObjectMapper objectMapper() {
-        return new ObjectMapper()
-                .disable(MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES)
-                .registerModule(new JavaTimeModule());
-    }
+//    @Bean
+//    public ObjectMapper objectMapper() {
+//        return new ObjectMapper()
+//                .disable(MapperFeature.REQUIRE_HANDLERS_FOR_JAVA8_TIMES)
+//                .registerModule(new JavaTimeModule());
+//    }
 }

@@ -5,7 +5,7 @@ import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.Min;
 import jakarta.validation.constraints.NotNull;
 import org.springframework.format.annotation.DateTimeFormat;
-import ru.aston.UserServiceAPI.dtos.UserDTOIn;
+import ru.aston.UserServiceAPI.dtos.UserDTORequest;
 
 import java.time.LocalDateTime;
 import java.util.Objects;
@@ -107,10 +107,10 @@ public class User {
         return Objects.hash(id,name,email,age,created_at);
     }
 
-    public User updateUser(UserDTOIn userDTOIn) {
-        this.setName(userDTOIn.getName());
-        this.setEmail(userDTOIn.getEmail());
-        this.setAge(userDTOIn.getAge());
+    public User updateUser(UserDTORequest userDTORequest) {
+        this.setName(userDTORequest.getName());
+        this.setEmail(userDTORequest.getEmail());
+        this.setAge(userDTORequest.getAge());
         this.setUpdated_at(LocalDateTime.now());
         return this;
     }

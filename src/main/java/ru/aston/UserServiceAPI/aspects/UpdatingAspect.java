@@ -8,7 +8,7 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.Environment;
 import org.springframework.stereotype.Component;
-import ru.aston.UserServiceAPI.dtos.UserDTOOut;
+import ru.aston.UserServiceAPI.dtos.UserDTOResponse;
 import ru.aston.UserServiceAPI.entitys.User;
 import ru.aston.UserServiceAPI.repos.UserRepository;
 
@@ -37,8 +37,8 @@ public class UpdatingAspect {
         Logger logger = LoggerFactory.getLogger(joinPoint
                 .getTarget()
                 .getClass());
-        if (result instanceof UserDTOOut) {
-            long id = ((UserDTOOut) result).getId();
+        if (result instanceof UserDTOResponse) {
+            long id = ((UserDTOResponse) result).getId();
             User user = userRepository.getReferenceById(id);
             if (user.getUpdated_at() == null) {
                 user.setUpdated_at(user.getCreated_at());

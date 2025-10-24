@@ -4,7 +4,7 @@ import org.springframework.hateoas.CollectionModel;
 import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.server.RepresentationModelAssembler;
 import org.springframework.stereotype.Component;
-import ru.aston.UserServiceAPI.controllers.UserController;
+import ru.aston.UserServiceAPI.controllers.UserControllerImpl;
 import ru.aston.UserServiceAPI.dtos.UserDTOResponse;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.*;
@@ -16,15 +16,15 @@ public class UserAssembler implements RepresentationModelAssembler<UserDTORespon
     @Override
     public EntityModel<UserDTOResponse> toModel(UserDTOResponse dto) {
         EntityModel<UserDTOResponse> entityModel = EntityModel.of(dto);
-        entityModel.add(linkTo(methodOn(UserController.class)
+        entityModel.add(linkTo(methodOn(UserControllerImpl.class)
                 .getUser(dto.getId(),null,null))
                 .withSelfRel()
                 .expand());
-        entityModel.add(linkTo(methodOn(UserController.class)
+        entityModel.add(linkTo(methodOn(UserControllerImpl.class)
                 .deleteUser(dto.getId()))
                 .withRel("Delete this user")
                 .withType("DELETE"));
-        entityModel.add(linkTo(methodOn(UserController.class)
+        entityModel.add(linkTo(methodOn(UserControllerImpl.class)
                 .updateUser(dto.getId(),null,null))
                 .withRel("Update this user")
                 .withType("PUT"));
@@ -35,11 +35,11 @@ public class UserAssembler implements RepresentationModelAssembler<UserDTORespon
     public CollectionModel<EntityModel<UserDTOResponse>> toCollectionModel(Iterable<? extends UserDTOResponse> entities) {
         return RepresentationModelAssembler.super
                 .toCollectionModel(entities)
-                .add(linkTo(methodOn(UserController.class)
+                .add(linkTo(methodOn(UserControllerImpl.class)
                         .getAllUsers(null,null,null))
                         .withSelfRel()
                         .withType("GET")
-                        .andAffordance(afford(methodOn(UserController.class)
+                        .andAffordance(afford(methodOn(UserControllerImpl.class)
                                 .createUser(null,null))));
     }
 }

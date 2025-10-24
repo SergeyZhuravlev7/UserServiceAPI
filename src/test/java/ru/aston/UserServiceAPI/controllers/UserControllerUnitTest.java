@@ -56,7 +56,7 @@ class UserControllerUnitTest {
     @Mock
     private ProducerService producerService;
     @InjectMocks
-    private UserController userController;
+    private UserControllerImpl userControllerImpl;
     @Mock
     private UserAssembler userAssembler;
 
@@ -89,7 +89,7 @@ class UserControllerUnitTest {
         when(userService.getDTOFromUser(validUser)).thenReturn(validUserDTOResponse);
         when(userAssembler.toModel(validUserDTOResponse)).thenReturn(EntityModel.of(validUserDTOResponse));
 
-        ResponseEntity<EntityModel<UserDTOResponse>> response = userController.getUser(validUser.getId(),null,null);
+        ResponseEntity<EntityModel<UserDTOResponse>> response = userControllerImpl.getUser(validUser.getId(),null,null);
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
         Assertions.assertNotNull(response.getBody());
@@ -102,7 +102,7 @@ class UserControllerUnitTest {
         when(userService.getDTOFromUser(validUser)).thenReturn(validUserDTOResponse);
         when(userAssembler.toModel(validUserDTOResponse)).thenReturn(EntityModel.of(validUserDTOResponse));
 
-        ResponseEntity<EntityModel<UserDTOResponse>> response = userController.getUser(null,validUser.getName(),null);
+        ResponseEntity<EntityModel<UserDTOResponse>> response = userControllerImpl.getUser(null,validUser.getName(),null);
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
         Assertions.assertNotNull(response.getBody());
@@ -115,7 +115,7 @@ class UserControllerUnitTest {
         when(userService.getDTOFromUser(validUser)).thenReturn(validUserDTOResponse);
         when(userAssembler.toModel(validUserDTOResponse)).thenReturn(EntityModel.of(validUserDTOResponse));
 
-        ResponseEntity<EntityModel<UserDTOResponse>> response = userController.getUser(null,null,validUser.getEmail());
+        ResponseEntity<EntityModel<UserDTOResponse>> response = userControllerImpl.getUser(null,null,validUser.getEmail());
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
         Assertions.assertNotNull(response.getBody());
@@ -128,7 +128,7 @@ class UserControllerUnitTest {
         when(userService.getDTOFromUser(validUser)).thenReturn(validUserDTOResponse);
         when(userAssembler.toModel(validUserDTOResponse)).thenReturn(EntityModel.of(validUserDTOResponse));
 
-        ResponseEntity<EntityModel<UserDTOResponse>> response = userController.getUser(validUser.getId(),
+        ResponseEntity<EntityModel<UserDTOResponse>> response = userControllerImpl.getUser(validUser.getId(),
                 validUser.getName(),
                 validUser.getEmail());
 
@@ -143,7 +143,7 @@ class UserControllerUnitTest {
     @ParameterizedTest
     @MethodSource ("invalidUserArgsMethodSource")
     void getUserWithNotValidArgsShouldThrowUserNotFoundException(Long id,String name,String email) {
-        assertThrows(UserNotFoundException.class,() -> userController.getUser(id,name,email));
+        assertThrows(UserNotFoundException.class,() -> userControllerImpl.getUser(id,name,email));
     }
 
     @ParameterizedTest
@@ -152,7 +152,7 @@ class UserControllerUnitTest {
         when(userService.getAllUsersWithPagination(anyInt(),anyInt())).thenReturn(userDTOResponseList);
         when(userAssembler.toCollectionModel(userDTOResponseList)).thenReturn(CollectionModel.of(entityModels));
 
-        ResponseEntity<CollectionModel<EntityModel<UserDTOResponse>>> response = userController.getAllUsers(page,size,null);
+        ResponseEntity<CollectionModel<EntityModel<UserDTOResponse>>> response = userControllerImpl.getAllUsers(page,size,null);
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
         Assertions.assertNotNull(response.getBody());
@@ -170,7 +170,7 @@ class UserControllerUnitTest {
         when(userService.getAllUsersDefaultWithSort(sort)).thenReturn(userDTOResponseList);
         when(userAssembler.toCollectionModel(userDTOResponseList)).thenReturn(CollectionModel.of(entityModels));
 
-        ResponseEntity<CollectionModel<EntityModel<UserDTOResponse>>> response = userController.getAllUsers(null,null,sort);
+        ResponseEntity<CollectionModel<EntityModel<UserDTOResponse>>> response = userControllerImpl.getAllUsers(null,null,sort);
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
         Assertions.assertNotNull(response.getBody());
@@ -185,7 +185,7 @@ class UserControllerUnitTest {
     @ParameterizedTest
     @CsvSource (value = {"1,2,notSort","1,2,blabla","1,2,"})
     void getAllUsersWithAllArgsShouldNotInvokeGetUserWithPagination(Integer page,Integer size,String sort) throws Exception {
-        userController.getAllUsers(page,size,sort);
+        userControllerImpl.getAllUsers(page,size,sort);
 
         verify(userService,never()).getAllUsersWithPaginationAndSort(anyInt(),anyInt(),anyString());
     }
@@ -193,7 +193,7 @@ class UserControllerUnitTest {
     @ParameterizedTest
     @CsvSource (value = {"0,,null",",0,null",",,null",",0,notSort"})
     void getAllUserWithInvalidArgsShouldInvokeGetUserDefault(Integer page,Integer size,String sort) {
-        userController.getAllUsers(page,size,sort);
+        userControllerImpl.getAllUsers(page,size,sort);
 
         verify(userService,never()).getAllUsersWithPaginationAndSort(anyInt(),anyInt(),anyString());
         verify(userService,never()).getAllUsersWithPagination(anyInt(),anyInt());
@@ -211,7 +211,7 @@ class UserControllerUnitTest {
                 .send(any(Sendable.class))
         ;
 
-        ResponseEntity<UserDTOResponse> response = userController.createUser(validUserDTORequest,bindingResult);
+        ResponseEntity<UserDTOResponse> response = userControllerImpl.createUser(validUserDTORequest,bindingResult);
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
         assertEquals(validUserDTOResponse,response.getBody());
@@ -222,14 +222,14 @@ class UserControllerUnitTest {
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(true);
 
-        assertThrows(NotValidUserException.class,() -> userController.createUser(validUserDTORequest,bindingResult));
+        assertThrows(NotValidUserException.class,() -> userControllerImpl.createUser(validUserDTORequest,bindingResult));
     }
 
     @ParameterizedTest
     @CsvSource (value = {"-1","-2","-3",","})
     void deleteUserShouldThrowUserNotFoundException(Long id) throws Exception {
 
-        assertThrows(UserNotFoundException.class,() -> userController.deleteUser(id));
+        assertThrows(UserNotFoundException.class,() -> userControllerImpl.deleteUser(id));
     }
 
     @ParameterizedTest
@@ -237,7 +237,7 @@ class UserControllerUnitTest {
     void deleteUserShouldTryToFindUserThenThrow(Long id) throws Exception {
         when(userService.deleteUserById(id)).thenReturn(Optional.empty());
 
-        assertThrows(UserNotFoundException.class,() -> userController.deleteUser(id));
+        assertThrows(UserNotFoundException.class,() -> userControllerImpl.deleteUser(id));
         verify(userService,times(1)).deleteUserById(id);
     }
 
@@ -250,7 +250,7 @@ class UserControllerUnitTest {
                 .send(any(Sendable.class))
         ;
 
-        ResponseEntity<UserDTOResponse> response = userController.deleteUser(id);
+        ResponseEntity<UserDTOResponse> response = userControllerImpl.deleteUser(id);
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
         assertEquals(validUserDTOResponse,response.getBody());
@@ -263,7 +263,7 @@ class UserControllerUnitTest {
         when(bindingResult.hasErrors()).thenReturn(false);
         when(userService.updateUser(id,validUserDTORequest)).thenReturn(Optional.of(validUserDTOResponse));
 
-        ResponseEntity<UserDTOResponse> response = userController.updateUser(id,validUserDTORequest,bindingResult);
+        ResponseEntity<UserDTOResponse> response = userControllerImpl.updateUser(id,validUserDTORequest,bindingResult);
 
         assertEquals(HttpStatus.OK,response.getStatusCode());
         assertEquals(validUserDTOResponse,response.getBody());
@@ -275,16 +275,15 @@ class UserControllerUnitTest {
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(true);
 
-        assertThrows(NotValidUserException.class,() -> userController.updateUser(id,validUserDTORequest,bindingResult));
+        assertThrows(NotValidUserException.class,() -> userControllerImpl.updateUser(id,validUserDTORequest,bindingResult));
     }
 
     @ParameterizedTest
     @CsvSource (value = {"0",",","-300","-3"})
     void updateUserWithInvalidIdShouldThrowNotValidException(Long id) throws Exception {
         BindingResult bindingResult = mock(BindingResult.class);
-        when(bindingResult.hasErrors()).thenReturn(false);
 
-        assertThrows(NotValidUserException.class,() -> userController.updateUser(id,validUserDTORequest,bindingResult));
+        assertThrows(UserNotFoundException.class,() -> userControllerImpl.updateUser(id,validUserDTORequest,bindingResult));
     }
 
     @ParameterizedTest
@@ -293,7 +292,7 @@ class UserControllerUnitTest {
         BindingResult bindingResult = mock(BindingResult.class);
         when(bindingResult.hasErrors()).thenReturn(true);
 
-        assertThrows(NotValidUserException.class,() -> userController.updateUser(id,validUserDTORequest,bindingResult));
+        assertThrows(NotValidUserException.class,() -> userControllerImpl.updateUser(id,validUserDTORequest,bindingResult));
     }
 
     private static Stream<Arguments> invalidUserArgsMethodSource() {

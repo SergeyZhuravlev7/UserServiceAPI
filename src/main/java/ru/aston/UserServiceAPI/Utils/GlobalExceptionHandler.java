@@ -6,55 +6,94 @@ import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.ServletRequestBindingException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
+import org.springframework.web.bind.annotation.ResponseStatus;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 
 import java.time.LocalDateTime;
-import java.util.HashMap;
 import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
     @ExceptionHandler (UserNotFoundException.class)
-    public ResponseEntity<Map<String, String>> handleUserNotFoundException(UserNotFoundException ex) {
+    @ResponseStatus (HttpStatus.NOT_FOUND)
+    public ErrorResponse handleUserNotFoundException(UserNotFoundException ex) {
         //TODO("Implement specific handler logic")
-        return new ResponseEntity<>(getErrorMap(ex.getMessage()),HttpStatus.BAD_REQUEST);
+        return new ErrorResponse(ex.getMessage());
     }
 
     @ExceptionHandler (NotValidUserException.class)
-    public ResponseEntity<Map<String, String>> handleNotValidUserException(NotValidUserException ex) {
+    @ResponseStatus (HttpStatus.BAD_REQUEST)
+    public ErrorResponseMap handleNotValidUserException(NotValidUserException ex) {
         //TODO("Implement specific handler logic")
-        return new ResponseEntity<>(ex.getErrorMap(),HttpStatus.BAD_REQUEST);
+        return new ErrorResponseMap(ex.getErrorMap());
     }
 
     @ExceptionHandler (HttpMessageNotReadableException.class)
-    public ResponseEntity<Map<String, String>> handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
-        return new ResponseEntity<>(getErrorMap(ErrorMessages.NOT_READABLE.getMessage()),HttpStatus.BAD_REQUEST);
+    @ResponseStatus (HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleHttpMessageNotReadableException(HttpMessageNotReadableException ex) {
+        return new ErrorResponse(ErrorMessages.NOT_READABLE.getMessage());
     }
 
     @ExceptionHandler (ServletRequestBindingException.class)
-    public ResponseEntity<Map<String, String>> handleServletRequestBindingException(ServletRequestBindingException ex) {
-        return new ResponseEntity<>(getErrorMap(ErrorMessages.BAD_REQUEST.getMessage()),HttpStatus.BAD_REQUEST);
+    @ResponseStatus (HttpStatus.BAD_REQUEST)
+    public ErrorResponse handleServletRequestBindingException(ServletRequestBindingException ex) {
+        return new ErrorResponse(ErrorMessages.BAD_REQUEST.getMessage());
     }
 
     @ExceptionHandler (HttpRequestMethodNotSupportedException.class)
-    public ResponseEntity<Map<String, String>> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
-        return new ResponseEntity<>(getErrorMap(ex.getMessage()),ex.getStatusCode());
+    public ResponseEntity<ErrorResponse> handleHttpRequestMethodNotSupportedException(HttpRequestMethodNotSupportedException ex) {
+        return new ResponseEntity<>(new ErrorResponse(ex.getMessage()),ex.getStatusCode());
     }
 
     @ExceptionHandler (Exception.class)
-    public ResponseEntity<Map<String, String>> handleUnknownException(Exception ex) {
-        return new ResponseEntity<>(getErrorMap(ErrorMessages.UNKNOWN_EXCEPTION.getMessage()),
-                HttpStatus.INTERNAL_SERVER_ERROR);
+    @ResponseStatus (HttpStatus.INTERNAL_SERVER_ERROR)
+    public ErrorResponse handleUnknownException(Exception ex) {
+        return new ErrorResponse(ErrorMessages.UNKNOWN_EXCEPTION.getMessage());
     }
 
-    private Map<String, String> getErrorMap(String message) {
-        Map<String, String> map = new HashMap<>();
-        map.put("Error message",message);
-        map.put("timestamp",
-                LocalDateTime
-                        .now()
-                        .toString());
-        return map;
+    public static class ErrorResponse {
+
+        private String error;
+        private LocalDateTime timestamp;
+
+        public ErrorResponse(String error) {
+            this.error = error;
+            this.timestamp = LocalDateTime.now();
+        }
+
+        public String getError() {
+            return error;
+        }
+
+        public void setError(String error) {
+            this.error = error;
+        }
+
+        public LocalDateTime getTimestamp() {
+            return timestamp;
+        }
+
+        public void setTimestamp(LocalDateTime timestamp) {
+            this.timestamp = timestamp;
+        }
+    }
+
+    public static class ErrorResponseMap {
+        private Map<String, String> errors;
+        private LocalDateTime timestamp;
+
+        public ErrorResponseMap(Map<String, String> errors) {
+            this.errors = errors;
+            this.timestamp = LocalDateTime.now();
+        }
+
+        public Map<String, String> getErrors() {
+            return errors;
+        }
+
+        public LocalDateTime getTimestamp() {
+            return timestamp;
+        }
     }
 }

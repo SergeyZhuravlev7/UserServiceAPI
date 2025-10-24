@@ -1,13 +1,11 @@
 package ru.aston.UserServiceAPI.dtos;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
-import org.springframework.hateoas.RepresentationModel;
 
 import java.util.Objects;
 
 @JsonIgnoreProperties (ignoreUnknown = true)
-
-public class UserDTOResponse extends RepresentationModel<UserDTOResponse> {
+public class UserDTOResponse {
 
     private Long id;
 
@@ -62,7 +60,7 @@ public class UserDTOResponse extends RepresentationModel<UserDTOResponse> {
     public boolean equals(Object o) {
         if (o == null || getClass() != o.getClass()) return false;
         UserDTOResponse that = (UserDTOResponse) o;
-        return age == that.age && Objects.equals(id,that.id) && Objects.equals(name,that.name) && Objects.equals(email, that.email);
+        return age == that.age && Objects.equals(id,that.id) && Objects.equals(name,that.name) && Objects.equals(email,that.email);
     }
 
     @Override

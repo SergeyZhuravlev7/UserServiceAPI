@@ -1,6 +1,5 @@
 package ru.aston.UserServiceAPI.controllers;
 
-import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.apache.kafka.clients.consumer.Consumer;
@@ -13,8 +12,6 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.testcontainers.service.connection.ServiceConnection;
-import org.springframework.hateoas.CollectionModel;
-import org.springframework.hateoas.EntityModel;
 import org.springframework.hateoas.MediaTypes;
 import org.springframework.http.MediaType;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -33,13 +30,12 @@ import org.testcontainers.kafka.KafkaContainer;
 import ru.aston.UserServiceAPI.Utils.ErrorMessages;
 import ru.aston.UserServiceAPI.dtos.UserDTORequest;
 import ru.aston.UserServiceAPI.dtos.UserDTOResponse;
-import ru.aston.UserServiceAPI.kafka.Sendable;
 import ru.aston.UserServiceAPI.kafka.ProducerService;
+import ru.aston.UserServiceAPI.kafka.Sendable;
 import ru.aston.UserServiceAPI.services.UserService;
 
 import java.time.Duration;
 import java.time.temporal.ChronoUnit;
-import java.util.List;
 import java.util.stream.IntStream;
 import java.util.stream.Stream;
 
@@ -129,7 +125,7 @@ public class UserControllerIntegrationTest {
                         .accept(MediaTypes.HAL_FORMS_JSON_VALUE))
                 .andReturn();
 
-        assertEquals(400,response
+        assertEquals(404,response
                 .getResponse()
                 .getStatus());
         assertTrue(response
@@ -148,10 +144,14 @@ public class UserControllerIntegrationTest {
                         .accept(MediaTypes.HAL_FORMS_JSON_VALUE))
                 .andReturn();
 
-        JsonNode root = objectMapper.readTree(response.getResponse().getContentAsString());
-        JsonNode embedded = root.path("_embedded").path("userDTOResponseList");
+        JsonNode root = objectMapper.readTree(response
+                .getResponse()
+                .getContentAsString());
+        JsonNode embedded = root
+                .path("_embedded")
+                .path("userDTOResponseList");
 
-        assertEquals(Integer.parseInt(size), embedded.size());
+        assertEquals(Integer.parseInt(size),embedded.size());
         assertEquals(200,response
                 .getResponse()
                 .getStatus());
@@ -169,10 +169,14 @@ public class UserControllerIntegrationTest {
                         .accept(MediaTypes.HAL_FORMS_JSON_VALUE))
                 .andReturn();
 
-        JsonNode root = objectMapper.readTree(response.getResponse().getContentAsString());
-        JsonNode embedded = root.path("_embedded").path("userDTOResponseList");
+        JsonNode root = objectMapper.readTree(response
+                .getResponse()
+                .getContentAsString());
+        JsonNode embedded = root
+                .path("_embedded")
+                .path("userDTOResponseList");
 
-        assertEquals(Integer.parseInt(size), embedded.size());
+        assertEquals(Integer.parseInt(size),embedded.size());
         assertEquals(200,response
                 .getResponse()
                 .getStatus());
@@ -203,7 +207,7 @@ public class UserControllerIntegrationTest {
                 .perform(post("/user")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(validUserDTORequest))
-                        .accept(MediaTypes.HAL_FORMS_JSON_VALUE))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andReturn();
         UserDTOResponse actualUser = objectMapper.readValue(response
                 .getResponse()
@@ -217,7 +221,7 @@ public class UserControllerIntegrationTest {
         assertEquals(validUserDTORequest.getEmail(),actualUser.getEmail());
         assertEquals(validUserDTORequest.getAge(),actualUser.getAge());
         assertNotNull(records);
-        verify(producerService, times(1)).send(any(Sendable.class));
+        verify(producerService,times(1)).send(any(Sendable.class));
         for (ConsumerRecord<String, String> record : records) {
             assertEquals(validUserDTORequest.getEmail(),record.key());
             assertEquals("created",record.value());
@@ -230,7 +234,7 @@ public class UserControllerIntegrationTest {
         var response = mockMvc
                 .perform(delete("/user")
                         .param("id",String.valueOf(existingId))
-                        .accept(MediaTypes.HAL_FORMS_JSON_VALUE))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andReturn();
         UserDTOResponse deletedUser = objectMapper.readValue(response
                 .getResponse()
@@ -255,13 +259,13 @@ public class UserControllerIntegrationTest {
         var response = mockMvc
                 .perform(delete("/user")
                         .param("id",String.valueOf(existingId))
-                        .accept(MediaTypes.HAL_FORMS_JSON_VALUE))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andReturn();
         String error = response
                 .getResponse()
                 .getContentAsString();
 
-        assertEquals(400,response
+        assertEquals(404,response
                 .getResponse()
                 .getStatus());
         assertTrue(error.contains(ErrorMessages.USER_NOT_FOUND.getMessage()));
@@ -273,7 +277,7 @@ public class UserControllerIntegrationTest {
         var response = mockMvc
                 .perform(delete("/user")
                         .param("id",id)
-                        .accept(MediaTypes.HAL_FORMS_JSON_VALUE))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andReturn();
         String error = response
                 .getResponse()
@@ -293,7 +297,7 @@ public class UserControllerIntegrationTest {
                         .param("id",id)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDTORequest))
-                        .accept(MediaTypes.HAL_FORMS_JSON_VALUE))
+                        .accept(MediaType.APPLICATION_JSON))
                 .andReturn();
         UserDTOResponse updatedUser = objectMapper.readValue(response
                 .getResponse()
@@ -313,7 +317,6 @@ public class UserControllerIntegrationTest {
         var response = mockMvc
                 .perform(post("/user")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaTypes.HAL_FORMS_JSON_VALUE)
                         .content(objectMapper.writeValueAsString(userDTORequest)))
                 .andReturn();
 
@@ -334,7 +337,7 @@ public class UserControllerIntegrationTest {
         var response = mockMvc
                 .perform(post("/user")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaTypes.HAL_FORMS_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDTORequest)))
                 .andReturn();
 
@@ -355,7 +358,7 @@ public class UserControllerIntegrationTest {
         var response = mockMvc
                 .perform(post("/user")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaTypes.HAL_FORMS_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDTORequest)))
                 .andReturn();
 
@@ -376,7 +379,7 @@ public class UserControllerIntegrationTest {
         var response = mockMvc
                 .perform(post("/user")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .accept(MediaTypes.HAL_FORMS_JSON_VALUE)
+                        .accept(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(userDTORequest)))
                 .andReturn();
 

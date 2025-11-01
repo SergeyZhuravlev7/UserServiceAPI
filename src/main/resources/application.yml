@@ -1,22 +1,26 @@
-spring:
-  application:
-    name: UserServiceAPI
-  data:
-    jpa:
-      repositories:
-        enabled: true
-  datasource:
-    driver-class-name: org.postgresql.Driver
-    username: postgres
-    password: admin
-    url: jdbc:postgresql://localhost:5432/
-  jpa:
-    show-sql: true
-    generate-ddl: true
-    hibernate:
-      ddl-auto: create-drop
-  kafka:
-    bootstrap-servers: localhost:9092
-    enabled: false
-notifications:
-  topic: notifications
+#spring:
+#  application:
+#    name: UserServiceAPI
+#  data:
+#    jpa:
+#      repositories:
+#        enabled: true
+#  datasource:
+#    driver-class-name: org.postgresql.Driver
+#    username: postgres
+#    password: admin
+#    url: jdbc:postgresql://localhost:5432/
+#  jpa:
+#    show-sql: true
+#    generate-ddl: true
+#    hibernate:
+#      ddl-auto: create-drop
+#  kafka:
+#    bootstrap-servers: localhost:9092
+#    enabled: false
+#notifications:
+#  topic: notifications
+server:
+  port: 8080
+service:
+  url: http://localhost:8080

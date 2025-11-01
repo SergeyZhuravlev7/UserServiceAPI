@@ -39,7 +39,7 @@ public class UserControllerImpl implements UserController {
 
     private final UserService userService;
     private final UserDTOValidator validator;
-    private final ProducerService producerService;
+    private ProducerService producerService;
     private final UserAssembler assembler;
 
     @Autowired
@@ -127,5 +127,9 @@ public class UserControllerImpl implements UserController {
         Optional<UserDTOResponse> userDTOOutOptional = userService.updateUser(id,userDTORequest);
         if (userDTOOutOptional.isEmpty()) throw new UserNotFoundException();
         return new ResponseEntity<>(userDTOOutOptional.get(),HttpStatus.OK);
+    }
+
+    public void setProducerService(ProducerService producerService) {
+        this.producerService = producerService;
     }
 }
